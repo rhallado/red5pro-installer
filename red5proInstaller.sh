@@ -516,6 +516,57 @@ install_bc_rhl()
 	lecho "bc installed at $install_bc"
 }
 
+install_linux_optimization(){
+    
+    if [[ "$RPRO_OS_NAME" == "Ubuntu" || $RPRO_OS_NAME == "Debian" ]]; then
+        
+        config_files=("/etc/sysctl.conf" "/etc/security/limits.conf" "/etc/pam.d/common-session")
+        sysctl_params=("fs.file-max = 1000000" "kernel.pid_max = 999999" "kernel.threads-max = 999999" "vm.max_map_count = 1999999")
+        limits_params=("root soft nofile 1000000" "root hard nofile 1000000")
+        common_session_params=("session required pam_limits.so")
+        
+        for index in ${!sysctl_params[*]}
+        do
+            if ! grep -q "${sysctl_params[${index}]}" "${config_files[0]}"; then
+                echo "${sysctl_params[${index}]}" | sudo tee -a ${config_files[0]}
+            else
+                echo "Parameter ${sysctl_params[${index}]} exist in the file ${config_files[0]}"
+            fi
+        done
+        sleep 0.5
+
+        for index in ${!limits_params[*]}
+        do
+            if ! grep -q "${limits_params[${index}]}" "${config_files[1]}"; then
+                echo "${limits_params[${index}]}" | sudo tee -a ${config_files[1]}
+            else
+                echo "Parameter ${limits_params[${index}]} exist in the file ${config_files[1]}"
+            fi
+        done
+        sleep 0.5
+        
+		for index in ${!common_session_params[*]}
+        do
+            if ! grep -q "${common_session_params[${index}]}" "${config_files[2]}"; then
+                echo "${common_session_params[${index}]}" | sudo tee -a ${config_files[2]}
+            else
+                echo "Parameter ${common_session_params[${index}]} exist in the file ${config_files[2]}"
+            fi
+        done
+		sleep 0.5
+        ulimit -n 1000000
+        sysctl -p
+		printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+		echo "LINUX FILE SYSTEM OPTIMIZATION -- DONE"
+		printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+		sleep 4
+    else
+        echo "This optimization does not support your Operating System: $RPRO_OS_NAME "
+		sleep 5
+    fi
+	show_utility_menu
+}
+
 # Public
 add_update_java()
 {
@@ -2713,6 +2764,8 @@ advance_menu()
 	echo "1. --- CHECK EXISTING RED5 PRO INSTALLATION"
 	echo "2. --- WHICH JAVA AM I USING ?		 "
 	printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -	
+	echo "3. --- LINUX FILE SYSTEM OPTIMIZATION		 "
+	printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -	
 	echo "0. --- BACK					 "
 	printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -	
 	echo "X. --- Exit					 "
@@ -2732,6 +2785,7 @@ advance_menu_read_options(){
 	case $choice in
 		1) cls && check_current_rpro ;;
 		2) cls && check_java 1 ;;
+		3) cls && install_linux_optimization ;;
 		0) cls && main ;;
 		[xX])  exit 0;;
 		*) echo -e "\e[41m Error: Invalid choice\e[m" && sleep 2 && show_utility_menu ;;
