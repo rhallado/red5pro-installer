@@ -517,13 +517,17 @@ install_bc_rhl()
 }
 
 install_linux_optimization(){
-    
+
     if [[ "$RPRO_OS_NAME" == "Ubuntu" || $RPRO_OS_NAME == "Debian" ]]; then
-        
+        log_name=$(logname)
         config_files=("/etc/sysctl.conf" "/etc/security/limits.conf" "/etc/pam.d/common-session")
         sysctl_params=("fs.file-max = 1000000" "kernel.pid_max = 999999" "kernel.threads-max = 999999" "vm.max_map_count = 1999999")
         limits_params=("root soft nofile 1000000" "root hard nofile 1000000")
         common_session_params=("session required pam_limits.so")
+        
+        if [[ "$log_name" != "root" ]]; then
+            limits_params+=("${log_name} soft nofile 1000000" "${log_name} hard nofile 1000000")
+        fi
         
         for index in ${!sysctl_params[*]}
         do
@@ -534,7 +538,7 @@ install_linux_optimization(){
             fi
         done
         sleep 0.5
-
+        
         for index in ${!limits_params[*]}
         do
             if ! grep -q "${limits_params[${index}]}" "${config_files[1]}"; then
@@ -545,7 +549,7 @@ install_linux_optimization(){
         done
         sleep 0.5
         
-		for index in ${!common_session_params[*]}
+        for index in ${!common_session_params[*]}
         do
             if ! grep -q "${common_session_params[${index}]}" "${config_files[2]}"; then
                 echo "${common_session_params[${index}]}" | sudo tee -a ${config_files[2]}
@@ -553,18 +557,18 @@ install_linux_optimization(){
                 echo "Parameter ${common_session_params[${index}]} exist in the file ${config_files[2]}"
             fi
         done
-		sleep 0.5
+        sleep 0.5
         ulimit -n 1000000
         sysctl -p
-		printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-		echo "LINUX FILE SYSTEM OPTIMIZATION -- DONE"
-		printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-		sleep 4
+        printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+        echo "LINUX FILE SYSTEM OPTIMIZATION -- DONE"
+        printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+        sleep 4
     else
         echo "This optimization does not support your Operating System: $RPRO_OS_NAME "
-		sleep 5
+        sleep 5
     fi
-	show_utility_menu
+    show_utility_menu
 }
 
 # Public
