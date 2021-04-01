@@ -48,7 +48,7 @@ RED5PRO_INSTALLER_OPERATIONS_CLEANUP=1
 RED5PRO_SSL_LETSENCRYPT_FOLDER_NAME="letsencrypt"
 RED5PRO_SSL_LETSENCRYPT_GIT="https://github.com/letsencrypt/letsencrypt"
 RED5PRO_SSL_LETSENCRYPT_FOLDER=
-RED5PRO_SSL_LETSENCRYPT_EXECUTABLE="letsencrypt-auto"
+RED5PRO_SSL_LETSENCRYPT_EXECUTABLE="certbot"
 RED5PRO_SSL_DEFAULT_HTTP_PORT=5080
 RED5PRO_SSL_DEFAULT_HTTPS_PORT=443
 RED5PRO_SSL_DEPRECATED_WS_PORT=8081
@@ -642,7 +642,8 @@ rpro_ssl_installer()
 
 	sleep 2
  
-	./letsencrypt-auto --help 2>&1 | tee -a "$RPRO_LOG_FILE"
+	#Rhallado: ./letsencrypt-auto --help 2>&1 | tee -a "$RPRO_LOG_FILE"
+	certbot --help 2>&1 | tee -a "$RPRO_LOG_FILE"
 	
 	# Get Certificate
 	ssl_cert_request_form
@@ -677,7 +678,8 @@ rpro_ssl_installer()
 		sleep 2
 
 		letsencrypt_cert_gen_success=0
-		rpro_ssl_response=$(./letsencrypt-auto certonly --standalone --email "$rpro_ssl_reg_email" --agree-tos -d "$rpro_ssl_reg_domain" 2>&1 | tee /dev/tty)
+		#rhallado
+		rpro_ssl_response=$(certbot certonly --standalone --email "$rpro_ssl_reg_email" --agree-tos -d "$rpro_ssl_reg_domain" 2>&1 | tee /dev/tty)
 
 		lecho "$rpro_ssl_response" | grep 'Congratulations! Your certificate and chain have been saved' &> /dev/null
 		if [ $? == 0 ]; then
